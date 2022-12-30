@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.leopisces.mybatis.mapper.EmployeeMapper">
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache"></cache>
+
+
+<!--    <select id="selectEmpById" resultType="cn.leopisces.mybatis.pojo.Employee">-->
+    <select id="selectEmpById" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        WHERE
+            id=#{empId}
+    </select>
+
+    <insert id="insertEmployee" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO
+            tbl_employee(last_name,email,salary)
+        VALUES
+            (#{lastName},#{email},#{salary})
+    </insert>
+
+    <delete id="deleteEmployeeById">
+        DELETE FROM
+            tbl_employee
+        WHERE
+            id=#{empId}
+    </delete>
+
+    <update id="updateEmployee">
+        UPDATE
+            tbl_employee
+        SET
+            last_name=#{lastName},
+            email=#{email},
+            salary=#{salary}
+        WHERE
+            id=#{id}
+    </update>
+
+    <select id="selectAllEmps" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+    </select>
+
+    <select id="selectEmpByOpr" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        WHERE
+            last_name=#{param1}   -- 支持【arg1,arg2】
+        AND
+            salary=#{param2}
+    </select>
+
+    <select id="selectEmpByPojo" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        WHERE
+            last_name=#{lastName}
+          AND
+            salary=#{salary}
+    </select>
+
+    <select id="selectEmpByNamed" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        WHERE
+            last_name=#{lastName}  -- 支持【param1,param2】
+          AND
+            salary=#{salary}
+    </select>
+
+    <select id="selectEmpByMap" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        WHERE
+            last_name=#{lastName}
+          AND
+            salary=#{salary}
+    </select>
+
+    <select id="selectEmpByDynamicTable" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            ${tblName}
+    </select>
+
+    <!--    查询单行数据返回Map集合-->
+    <select id="selectEmpReturnMap" resultType="map">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        WHERE
+            id=#{empId}
+    </select>
+
+    <select id="selectEmpsReturnMap" resultType="map">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+    </select>
+
+<!--####################################################################################################################-->
+
+    <!--自定义映射 【级联映射】-->
+    <resultMap id="empAndDeptResultMap" type="employee">
+        <!--  定义主键字段与属性关联关系 -->
+        <id column="id" property="id"></id>
+        <!--  定义非主键字段与属性关联关系-->
+        <result column="last_name" property="lastName"></result>
+        <result column="email" property="email"></result>
+        <result column="salary" property="salary"></result>
+        <!--        为员工中所属部门，自定义关联关系-->
+        <result column="dept_id" property="dept.deptId"></result>
+        <result column="dept_name" property="dept.deptName"></result>
+    </resultMap>
+
+    <!--    自定义映射 【association】-->
+    <resultMap id="empAndDeptResultMapAssociation" type="employee">
+        <!--  定义主键字段与属性关联关系 -->
+        <id column="id" property="id"></id>
+        <!--  定义非主键字段与属性关联关系-->
+        <result column="last_name" property="lastName"></result>
+        <result column="email" property="email"></result>
+        <result column="salary" property="salary"></result>
+        <!--        为员工中所属部门，自定义关联关系-->
+        <association property="dept"
+                     javaType="cn.leopisces.mybatis.pojo.Dept">
+            <id column="dept_id" property="deptId"></id>
+            <result column="dept_name" property="deptName"></result>
+        </association>
+    </resultMap>
+
+    <select id="selectEmpAndDeptByEmpId" resultMap="empAndDeptResultMapAssociation">
+        SELECT
+            e.id,
+            e.email,
+            e.last_name,
+            e.salary,
+            d.dept_id,
+            d.dept_name
+        FROM
+            tbl_employee e,
+            tbl_dept d
+        WHERE
+            e.dept_id = d.dept_id
+        AND
+            e.id=#{empId}
+    </select>
+
+    <resultMap id="EmpAndDeptByEmpIdAssociationStep" type="employee">
+        <id property="id" column="id"></id>
+        <result property="lastName" column="last_name"></result>
+        <result property="email" column="email"></result>
+        <result property="salary" column="salary"></result>
+        <!--查询中多个参数，则需要将多个参数封装成Map来进行传递，语法如下: {k1=v1, k2=v2....} 如 column="{dId=dept_id} 此时入参将要改为dId"-->
+        <association property="dept"
+                     select="cn.leopisces.mybatis.mapper.DeptMapper.selectDeptById"
+                     column="dept_id"
+                     fetchType="lazy"> <!--eager局部关闭延迟加载 lazy开启   局部懒加载不受全局设置控制-->
+        </association>
+    </resultMap>
+    <select id="selectEmpAndDeptByEmpIdAssociationStep" resultMap="EmpAndDeptByEmpIdAssociationStep">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary,
+            dept_id
+        FROM
+            tbl_employee
+        WHERE
+            id=#{empId}
+    </select>
+
+    <select id="selectEmpByDeptId" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary,
+            dept_id
+        FROM
+            tbl_employee
+        WHERE
+            dept_id=#{deptId}
+    </select>
+
+    <select id="selectEmployeeByOpr" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary,
+            dept_id
+        FROM
+            tbl_employee
+        <where>
+            <if test="id!=null">
+                AND id=#{id}
+            </if>
+            <if test="lastName!=null">
+                AND last_name=#{lastName}
+            </if>
+            <if test="email!=null">
+                AND email=#{email}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectEmployeeByOprTrim" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary,
+            dept_id
+            FROM
+            tbl_employee
+        <trim prefix="WHERE" suffixOverrides="AND">
+            <if test="id!=null">
+                id=#{id} AND
+            </if>
+            <if test="lastName!=null">
+                last_name=#{lastName} AND
+            </if>
+            <if test="email!=null">
+                email=#{email} AND
+            </if>
+        </trim>
+
+    </select>
+
+    <update id="updateEmpByOpr">
+        UPDATE
+            tbl_employee
+        <set>
+            <if test="lastName!=null">
+                last_name=#{lastName},
+            </if>
+            <if test="lastName!=null">
+                last_name=#{lastName},
+            </if>
+            <if test="email!=null">
+                email=#{email}
+            </if>
+        </set>
+    </update>
+
+    <select id="selectEmpByOneOpr" resultType="employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+        <where>
+            <choose>
+                <when test="id!=null">
+                    id=#{id}
+                </when>
+                <when test="lastName!=null">
+                    last_name=#{lastName}
+                </when>
+                <when test="email!=null">
+                    email=#{email}
+                </when>
+                <when test="salary">
+                    salary=#{salary}
+                </when>
+                <otherwise>
+                    1=1
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <!--sql片段-->
+    <sql id="select_employee">
+        SELECT
+            id,
+            last_name,
+            email,
+            salary
+        FROM
+            tbl_employee
+    </sql>
+    <select id="selectEmpByIds" resultType="employee">
+        <include refid="select_employee"></include>
+        <where>
+            id in(
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </where>
+    </select>
+
+    <insert id="batchInsertEmp">
+        INSERT INTO
+            tbl_employee(last_name,email,salary,dept_id)
+        VALUES
+            <foreach collection="employees" item="emp" separator=",">
+                (#{emp.lastName},#{emp.email},#{emp.salary},#{emp.dept_id})
+            </foreach>
+    </insert>
+</mapper>

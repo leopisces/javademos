@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <!-- 加载外部属性文件 -->
+    <properties resource="db.properties">
+        <!--        <property name="driver" value="com.mysql.cj.jdbc.Driver"/>-->
+    </properties>
+
+    <settings>
+        <!-- 开启驼峰命名自动映射 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- 开启延迟加载 -->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <!-- 设置加载的数据是按需加载3.4.2及以后的版本该步骤可省略-->
+        <setting name="aggressiveLazyLoading" value="false"/>
+        <!-- 开启二级缓存 -->
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+
+    <typeAliases>
+        <!--        <typeAlias type="cn.leopisces.mybatis.pojo.Employee" alias="employee"></typeAlias>-->
+        <package name="cn.leopisces.mybatis.pojo"/>
+    </typeAliases>
+
+    <!-- 设置数据库的连接环境 -->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <!--                mysql8版本-->
+                <property name="driver" value="${db.driver}"/>
+                <property name="url" value="${db.url}"/>
+                <!--                mysql5版本-->
+                <!--                <property name="driver" value="com.mysql.jdbc.Driver"/>-->
+                <!--                <property name="url" value="jdbc:mysql://localhost:3306/db220106"/>-->
+                <property name="username" value="${db.username}"/>
+                <property name="password" value="${db.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!--    设置映射文件路径-->
+    <mappers>
+        <mapper resource="mapper/EmployeeMapper.xml"/>
+        <!-- 要求：接口的包名与映射文件的包名需要一致 -->
+        <!--        <package name="cn.leopisces.mybatis.mapper"/>-->
+        <mapper resource="mapper/DeptMapper.xml"/>
+    </mappers>
+</configuration>
